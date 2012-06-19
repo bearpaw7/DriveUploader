@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE uploader [
+  <!ELEMENT uploader (account, password)>
+  <!ELEMENT account (#PCDATA)>
+  <!ELEMENT password (#PCDATA)>
+]>
+<uploader>
+    <account>me@gmail.com</account>
+    <password>password1</password>
+</uploader>
