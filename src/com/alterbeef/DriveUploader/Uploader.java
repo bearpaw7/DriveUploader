@@ -2,54 +2,59 @@ package com.alterbeef.DriveUploader;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.*;
-import java.util.ArrayList;
-import javax.mail.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 
-import com.google.gdata.client.authn.oauth.*;
-import com.google.gdata.client.docs.*;
-import com.google.gdata.data.*;
-import com.google.gdata.data.batch.*;
-import com.google.gdata.data.docs.*;
-import com.google.gdata.util.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
-import javax.xml.parsers.*;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.*;
-import javax.xml.transform.stream.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
-import org.xml.sax.*;
-import org.w3c.dom.*;
+import com.google.gdata.client.docs.DocsService;
+import com.google.gdata.data.docs.DocumentListEntry;
+import com.google.gdata.data.docs.DocumentListFeed;
+import com.google.gdata.util.AuthenticationException;
+import com.google.gdata.util.ServiceException;
 
-@SuppressWarnings("unused")
 public class Uploader {
-
 	private String account = null;
 	private String password = null;
+	private DocsService service;
+	private DocumentListEntry collection;
 
-	public Uploader(String _file) {
-		if(! testFile(_file)){		// test declared file
-			System.err.println("Exiting - Error with file: " + _file.toString());
+	public Uploader(String[] args) {
+		if(! testFile(args[0])){		// test declared file
+			System.err.println("Exiting - Error with file: " + args[0].toString());
 			return;
 		}
 		if(! readXML()){				// read config from xml
 			System.err.println("Exiting - Error with XML");
 			return;
 		}
-		if(! testLogin()){			// test login
+		if(! testLogin()){				// test login
 			System.err.println("Exiting - Error with login");
 			return;
 		}
+		if(args.length == 2)			// test collection
+			if(! testCollection(args[1])){
+				System.err.println("Exiting - Error with collection");
+				return;
+			}
 			// create doc
 			// push doc
 	}
 
 	public static void main(String[] args){
-		if(args.length != 1){
-			System.out.println("\nUsage: uploader  <file> ");
+		if(args.length == 0 || args.length > 2){
+			System.out.println("\nUsage: uploader <file> ");
+			System.out.println("\n       uploader <file> <collection>");
 			return;
 		}
-		new Uploader(args[0]);
+		new Uploader(args);
 	}
 
 	private boolean testFile(String _file){
@@ -70,7 +75,7 @@ public class Uploader {
 		}
 		return false;
 	}
-	
+
 	private boolean readXML(){
         Document dom;
         // Make an  instance of the DocumentBuilderFactory
@@ -129,17 +134,43 @@ public class Uploader {
 	}
 
 	private boolean testLogin(){
-		DocsService service = new DocsService("alterbeef-DriveUploader-v1");
-
+		service = new DocsService("alterbeef-DriveUploader-v1");
 	    try {
 			service.setUserCredentials(account, password);
 			System.out.println("Service Info: " + service.getServiceVersion());
 			return true;
 		} catch (AuthenticationException e) {
-			// TODO Auto-generated catch block
 			System.out.println("Failed to authenticate");
 			e.printStackTrace();
 		}
 	    return false;
+	}
+
+	private boolean testCollection(String collectionStr){
+		URL feedUri;
+		DocumentListFeed feed;
+		try {
+			service.setProtocolVersion(DocsService.Versions.V2);
+			feedUri = new URL("https://docs.google.com/feeds/documents/private/full/-/folder?showfolders=true");
+			feed = service.getFeed(feedUri, DocumentListFeed.class);
+			System.out.println("Searched for " + collectionStr + ", found " + feed.getEntries().size());
+			for (DocumentListEntry entry : feed.getEntries()) {
+//			    String resourceId = entry.getResourceId();
+//			    System.out.println(" -- Document(" + resourceId + "/" + entry.getTitle().getPlainText() + ")");
+			    if(entry.getTitle().getPlainText().equalsIgnoreCase(collectionStr)){
+			    	collection = entry;
+			    	System.out.println("Collection found");
+			    	return true;
+			    }
+			}
+			System.out.println("Collection \"" + collectionStr + "\" not found");
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ServiceException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 }
