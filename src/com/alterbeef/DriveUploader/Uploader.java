@@ -71,21 +71,6 @@ public class Uploader {
 		return false;
 	}
 	
-	private boolean testLogin(){
-		DocsService service;
-		
-		service = new DocsService("alterbeef-DriveUploader-v1");
-		
-	    try {
-			service.setUserCredentials(account, password);
-		} catch (AuthenticationException e) {
-			// TODO Auto-generated catch block
-			System.out.println("fail auth");
-			e.printStackTrace();
-		}
-	    return false;
-	}
-	
 	private boolean readXML(){
         Document dom;
         // Make an  instance of the DocumentBuilderFactory
@@ -141,5 +126,20 @@ public class Uploader {
 	        value = nl.item(0).getFirstChild().getNodeValue();
 	    }
 	    return value;
+	}
+
+	private boolean testLogin(){
+		DocsService service = new DocsService("alterbeef-DriveUploader-v1");
+
+	    try {
+			service.setUserCredentials(account, password);
+			System.out.println("Service Info: " + service.getServiceVersion());
+			return true;
+		} catch (AuthenticationException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Failed to authenticate");
+			e.printStackTrace();
+		}
+	    return false;
 	}
 }
