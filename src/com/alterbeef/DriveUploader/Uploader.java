@@ -2,8 +2,9 @@ package com.alterbeef.DriveUploader;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.*;
 import java.util.ArrayList;
+import javax.mail.*;
 
 import com.google.gdata.client.authn.oauth.*;
 import com.google.gdata.client.docs.*;
@@ -27,9 +28,18 @@ public class Uploader {
 	private String password = null;
 
 	public Uploader(String _file) {
-		testFile(_file);	// test declared file
-		readXML();			// read config from xml
-		//testLogin();		// test login
+		if(! testFile(_file)){		// test declared file
+			System.err.println("Exiting - Error with file: " + _file.toString());
+			return;
+		}
+		if(! readXML()){				// read config from xml
+			System.err.println("Exiting - Error with XML");
+			return;
+		}
+		if(! testLogin()){			// test login
+			System.err.println("Exiting - Error with login");
+			return;
+		}
 			// create doc
 			// push doc
 	}
@@ -61,14 +71,19 @@ public class Uploader {
 		return false;
 	}
 	
-	private void testLogin(){
-	    DocsService service = new DocsService("MyDocumentsListIntegration-v1");
+	private boolean testLogin(){
+		DocsService service;
+		
+		service = new DocsService("alterbeef-DriveUploader-v1");
+		
 	    try {
 			service.setUserCredentials(account, password);
 		} catch (AuthenticationException e) {
 			// TODO Auto-generated catch block
+			System.out.println("fail auth");
 			e.printStackTrace();
 		}
+	    return false;
 	}
 	
 	private boolean readXML(){
@@ -97,7 +112,7 @@ public class Uploader {
             	return false;
             }
 
-            password = getTextValue(password, doc, "password");
+            password = getTextValue(password, doc, "application_specific_password");
             if (password != null) {
                 if (!password.isEmpty()){
                 	System.out.println("Read password: length = " + password.length());

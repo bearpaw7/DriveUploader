@@ -6,5 +6,5 @@
 ]>
 <uploader>
     <account>me@gmail.com</account>
-    <password>password1</password>
+    <application_specific_password>password1</application_specific_password>
 </uploader>
